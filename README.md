@@ -21,7 +21,7 @@
 - **Teemo** [Q,W,R]
 - **Zilean** [Q,W,E,R]
 
-- **Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for theSLOTTED.CC community.
+**Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for theSLOTTED.CC community.
 
 ## Disclaimer
 
