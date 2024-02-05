@@ -1,6 +1,6 @@
 # [vAIO] for SLOTTED.CC
 
-**Welcome to the vAIO GitHub repository**, the ultimate assembly of Lua scripts designed for enhancing your League of Legends gameplay experience through SLOTTED.CC. Created by 'v', vAIO is your all-in-one solution to elevate your game with a wide array of champion-specific scripts.
+**Welcome to the vAIO GitHub repository**, the ultimate assembly of Lua scripts designed for enhancing your League of Legends gameplay experience through SLOTTED.CC. Created by 'v', [vAIO] is your all-in-one solution to elevate your game with a wide array of champion-specific scripts.
 
 ## What is [vAIO]?
 
