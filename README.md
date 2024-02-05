@@ -8,7 +8,7 @@
 
 ## Features
 
-- **Comprehensive Champion Coverage:** vAIO includes scripts for a wide range of League of Legends champions, each tailored to harness their unique abilities and gameplay styles.
+**Comprehensive Champion Coverage:** vAIO includes scripts for a wide range of League of Legends champions, each tailored to harness their unique abilities and gameplay styles.
 
 ### Supported Champions
 
