@@ -1,4 +1,4 @@
-# vAIO for SLOTTED.CC
+# [vAIO] for SLOTTED.CC
 
 **Welcome to the vAIO GitHub repository**, the ultimate assembly of Lua scripts designed for enhancing your League of Legends gameplay experience through SLOTTED.CC. Created by 'v', vAIO is your all-in-one solution to elevate your game with a wide array of champion-specific scripts.
 
@@ -21,11 +21,11 @@
 - **Teemo** [Q,W,R]
 - **Zilean** [Q,W,E,R]
 
-- **Open Source:** Embracing the spirit of community and collaboration, vAIO is fully open source. We welcome contributions, improvements, and feedback from the gaming and developer community.
+- **Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for theSLOTTED.CC community.
 
 ## Disclaimer
 
-> **Note:** vAIO is created for educational and entertainment purposes. We do not endorse or encourage the use of scripts for unfair advantage in competitive environments. Users should comply with League of Legends terms of service.
+> **Note:** [vAIO] is created for educational and entertainment purposes. We do not endorse or encourage the use of scripts for unfair advantage in competitive environments. Users should comply with League of Legends terms of service.
 
 ## Support
 
