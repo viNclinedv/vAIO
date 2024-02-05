@@ -2,13 +2,13 @@
 
 **Welcome to the vAIO GitHub repository**, the ultimate assembly of Lua scripts designed for enhancing your League of Legends gameplay experience through SLOTTED.CC. Created by 'v', vAIO is your all-in-one solution to elevate your game with a wide array of champion-specific scripts.
 
-## What is vAIO?
+## What is [vAIO]?
 
 [vAIO] is an open-source Lua script compilation created with the aim of providing SLOTTED.CC users access to a versatile toolkit for various champions within League. Each script is meticulously crafted to offer advanced functionalities, optimizing strategies, and ensuring a seamless gaming experience.
 
 ## Features
 
-**Comprehensive Champion Coverage:** vAIO includes scripts for a wide range of League of Legends champions, each tailored to harness their unique abilities and gameplay styles.
+**Comprehensive Champion Coverage:** [vAIO] includes scripts for a wide range of League of Legends champions, each tailored to harness their unique abilities and gameplay styles.
 
 ### Supported Champions
 
