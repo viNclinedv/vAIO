@@ -4,6 +4,72 @@
 
 --local vUtils = require "lib.vUtils"
 
+local vAIO_VERSION = "1.0"
+local vAIO_LUA_NAME = "vAIO.lua"
+local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
+local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
+
+-- Function to get the content of a URL (e.g., the script)
+local function fetch_url(url)
+    local handle = io.popen("curl -s -H 'Cache-Control: no-cache' " .. url)
+    if not handle then
+        print("Failed to fetch URL: " .. url)
+        return nil
+    end
+    local content = handle:read("*a")
+    handle:close()
+    return content
+end
+
+-- Function to extract the version number from the script content
+local function extract_version(content)
+    local version = content:match("local vAIO_VERSION = \"(%d+%.%d+)\"")
+    return version
+end
+
+-- Function to check for updates and apply them if necessary
+local function check_for_update()
+    local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
+    if not latest_script_content then
+        print("Failed to fetch [vAIO] for update check.")
+        return
+    end
+
+    local remote_version = extract_version(latest_script_content)
+    if not remote_version then
+        print("Failed to extract version from the latest [vAIO] content.")
+        return
+    end
+
+    if remote_version and remote_version > vAIO_VERSION then
+        print("Updating from version " .. vAIO_VERSION .. " to " .. remote_version)
+        if update_script(latest_script_content) then
+            print("Update successful. Please reload [vAIO].")
+        else
+            print("Failed to update [vAIO].")
+        end
+    else
+        print("You are running the latest version of [vAIO].")
+    end
+end
+
+-- Function to replace the current script with the latest version
+local function update_script(latest_script_content)
+    local file, errorMessage = io.open(vAIO_LUA_NAME, "w")
+    if not file then
+        print("Failed to open the current file for writing. Error: " .. errorMessage)
+        return false
+    end
+    file:write(latest_script_content)
+    file:close()
+    return true
+end
+
+check_for_update()
+
+
+
+
 --[[
     Lockdown Leona -Start
 ]]--
