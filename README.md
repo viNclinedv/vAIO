@@ -29,7 +29,7 @@
 
 Place `vAIO.lua` into the `SLOTTED.CC"/lua directory`. Note that part of this directory path is unique to each user but follows a consistent naming scheme.
 
-### Step 1: Locate The SLOTTED.CC LUA Directory
+#### Step 1: Locate The SLOTTED.CC LUA Directory
 First, you need to find your unique directory, which follows the pattern `C:\GhlOODPgOV==\lua`. The `GhlOODPgOV==` portion of the path is exclusive to you.
 
 ### Step 2: Download [vAIO]
