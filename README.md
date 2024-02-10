@@ -32,10 +32,10 @@ Place `vAIO.lua` into the `SLOTTED.CC"/lua directory`. Note that part of this di
 #### Step 1: Locate The SLOTTED.CC LUA Directory
 First, you need to find your unique directory, which follows the pattern `C:\GhlOODPgOV==\lua`. The `GhlOODPgOV==` portion of the path is exclusive to you.
 
-### Step 2: Download [vAIO]
+#### Step 2: Download [vAIO]
 Before proceeding with the installation, ensure that you have downloaded the latest version of `vAIO.lua` from this GitHub.
 
-### Step 3: Install [vAIO]
+#### Step 3: Install [vAIO]
 Once you have located the `C:\GhlOODPgOV==\lua` directory and downloaded `vAIO.lua`, follow these steps:
 
 1. Open the `C:\GhlOODPgOV==\lua` directory in a File Explorer window.
