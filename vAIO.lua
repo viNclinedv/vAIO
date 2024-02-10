@@ -4,7 +4,7 @@
 
 --local vUtils = require "lib.vUtils"
 
-local vAIO_VERSION = "99.0"
+local vAIO_VERSION = "1.0"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
