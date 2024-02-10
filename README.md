@@ -29,13 +29,13 @@
 
 Place `vAIO.lua` into the `SLOTTED.CC"/lua directory`. Note that part of this directory path is unique to each user but follows a consistent naming scheme.
 
-### Step 1: Locate The SLOTTED.CC LUA Directory
+## Step 1: Locate The SLOTTED.CC LUA Directory
 First, you need to find your unique directory, which follows the pattern `C:\GhlOODPgOV==\lua`. The `GhlOODPgOV==` portion of the path is exclusive to you.
 
-### Step 2: Download [vAIO]
+## Step 2: Download [vAIO]
 Before proceeding with the installation, ensure that you have downloaded the latest version of `vAIO.lua` from this GitHub.
 
-### Step 3: Install [vAIO]
+## Step 3: Install [vAIO]
 Once you have located the `C:\GhlOODPgOV==\lua` directory and downloaded `vAIO.lua`, follow these steps:
 
 1. Open the `C:\GhlOODPgOV==\lua` directory in a File Explorer window.
@@ -43,11 +43,12 @@ Once you have located the `C:\GhlOODPgOV==\lua` directory and downloaded `vAIO.l
  
  
  
-**Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for the SLOTTED.CC community.
+
 
 ## Disclaimer
 
 > **Note:** [vAIO] is created for educational and entertainment purposes. We do not endorse or encourage the use of scripts for unfair advantage in competitive environments. Users should comply with League of Legends terms of service.
+**Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for the SLOTTED.CC community.
 
 ## Support
 
