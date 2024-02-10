@@ -40,6 +40,8 @@ Once you have located the `C:\GhlOODPgOV==\lua` directory and downloaded `vAIO.l
 3. Move the `vAIO.lua` file into the above folder.
 
 
+
+
 **Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for the SLOTTED.CC community.
 
 ## Disclaimer
