@@ -10,7 +10,7 @@
 
 **Comprehensive Champion Coverage:** [vAIO] includes scripts for a wide range of League of Legends champions, each tailored to harness their unique abilities and gameplay styles.
 
-**Seamless AutoUpdater:** With the newly integrated AutoUpdater, [vAIO] ensures you're always up to date with the latest scripts and features without the hassle of manual downloads. Experience effortless updates and improvements, ensuring your gameplay remains uninterrupted and at peak performance.
+**Seamless AutoUpdater:** With an integrated AutoUpdater for [vAIO], you're always up to date with the latest scripts and features without the hassle of manual downloads. Experience effortless updates and improvements, ensuring your gameplay and scripting remains uninterrupted and at peak performance.
 
 ### Supported Champions
 
