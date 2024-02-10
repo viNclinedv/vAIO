@@ -4,12 +4,14 @@
 
 --local vUtils = require "lib.vUtils"
 
+
+
+
 local vAIO_VERSION = "1.0"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
 
--- Function to fetch the content of the script from the URL
 local function fetch_url(url)
     local handle = io.popen("curl -s -H 'Cache-Control: no-cache' " .. url)
     if not handle then
@@ -20,49 +22,34 @@ local function fetch_url(url)
     handle:close()
     return content
 end
-
--- Function to replace the current script with the latest version
 local function replace_current_file_with_latest_version(latest_version_script)
-    -- Assuming your environment provides a similar way to get the base resource path
     local resources_path = cheat:get_resource_path()
-    -- Adjust the path according to the actual location of vAIO.lua within your resources
     local current_file_path = resources_path:gsub("resources$", "lua/" .. vAIO_LUA_NAME)
-  
     local file, errorMessage = io.open(current_file_path, "w")
-  
     if not file then
       print("Failed to open the current file for writing. Error: ", errorMessage)
       return false
     end
-  
     file:write(latest_version_script)
     file:close()
-  
     return true
   end
-  
-
--- Function to check for updates and apply them if necessary
 local function check_for_update()
     local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
     if not latest_script_content then
         print("Failed to fetch [vAIO] for update check.")
         return
     end
-
-    -- Extract version directly from the fetched script content
     local remote_version = latest_script_content:match("local vAIO_VERSION = \"(%d+%.%d+)\"")
     if not remote_version then
         print("Failed to extract version from the latest [vAIO] content.")
         return
     end
-
     print("Local version: " .. vAIO_VERSION .. ", Remote version: " .. remote_version)
     if remote_version and remote_version > vAIO_VERSION then
         print("Updating from version " .. vAIO_VERSION .. " to " .. remote_version)
         if replace_current_file_with_latest_version(latest_script_content) then
             print("Update successful. Please reload [vAIO].")
-            -- Depending on your environment, you may need to restart the script or notify the user to do so
         else
             print("Failed to update [vAIO].")
         end
@@ -70,8 +57,6 @@ local function check_for_update()
         print("You are running the latest version of [vAIO].")
     end
 end
-
--- Initiate the update check process
 check_for_update()
 
 
