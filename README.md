@@ -12,14 +12,14 @@
 
 ### Supported Champions
 
-- **Kayn** [Q,W,R] with Spell Clear
-- **Kha'Zix** [Q,W,E,R] with Spell Clear
+- **Kayn** [Q,W,R] with Spell Clear -- REMOVED FOR RECODE
+- **Kha'Zix** [Q,W,E,R] with Spell Clear -- REMOVED FOR RECODE
 - **Leona** [Q,W,E,R]
-- **Lissandra** [Q,W,E,R] with Spell Clear
-- **Lulu** [Q,W,E,R]
-- **Renata Glasc** [Q,W,E,R]
+- **Lissandra** [Q,W,E,R] with Spell Clear -- REMOVED FOR RECODE
+- **Lulu** [Q,W,E,R] -- REMOVED FOR RECODE
+- **Renata Glasc** [Q,W,E,R] -- REMOVED FOR RECODE
 - **Teemo** [Q,W,R]
-- **Zilean** [Q,W,E,R]
+- **Zilean** [Q,W,E,R] -- REMOVED FOR RECODE
 
 **Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for the SLOTTED.CC community.
 
