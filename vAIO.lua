@@ -61,15 +61,9 @@ check_for_update()
 
 
 
+function vLeona()
 
-
-
---[[
-    Lockdown Leona -Start
-]]--
-function LockdownLeona()
-
-                        Script_name = "Lockdown Leona"
+                        Script_name = "vLeona"
                         Combo_key = 1
                         Clear_key = 3
                         Harass_key = 4
@@ -525,13 +519,8 @@ function LockdownLeona()
                             end
                         })
 end
---[[
-    Lockdown Leona -End
-]]--
---[[
-    Tasty Teemo -Start
-]]--
-function TastyTeemo()
+
+function vTeemo()
                 --variables
                 Combo_key = 1
                 Clear_key = 3
@@ -543,7 +532,7 @@ function TastyTeemo()
                 R_speed, R_width, R_windup = 1000, 160, 0.25
                 R_range = g_local:get_spell_book():get_spell_slot(e_spell_slot.r).level * 250 + 150
                 R_cost = 75
-                Script_name = "Tasty Teemo"
+                Script_name = "vTeemo"
 
 
 
@@ -763,9 +752,7 @@ function TastyTeemo()
                     })
 
 end
---[[
-    Tasty Teemo -End
-]]--
+
 
 
 LoadDBG = 1
@@ -774,16 +761,11 @@ function LoadPrints(str)
         print(str)
     end
 end
-
-
 local championModules = {
-    Leona = LockdownLeona,
-    Teemo = TastyTeemo,
+    Leona = vLeona,
+    Teemo = vTeemo,
 }
-
 Champion = g_local.champion_name.text
-
-
 if championModules[Champion] then
     championModules[Champion]()
     LoadPrints("+" .. Champion .. "+ -- Loading from [vAIO]")
