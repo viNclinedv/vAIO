@@ -4,7 +4,7 @@
 
 --local vUtils = require "lib.vUtils"
 
-local vAIO_VERSION = "99.0"
+local vAIO_VERSION = "0.0"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
@@ -23,15 +23,24 @@ end
 
 -- Function to replace the current script with the latest version
 local function replace_current_file_with_latest_version(latest_version_script)
-    local file, errorMessage = io.open(vAIO_LUA_NAME, "w")
+    -- Assuming your environment provides a similar way to get the base resource path
+    local resources_path = cheat:get_resource_path()
+    -- Adjust the path according to the actual location of vAIO.lua within your resources
+    local current_file_path = resources_path:gsub("resources$", "lua/" .. vAIO_LUA_NAME)
+  
+    local file, errorMessage = io.open(current_file_path, "w")
+  
     if not file then
-        print("Failed to open the current file for writing. Error: ", errorMessage)
-        return false
+      print("Failed to open the current file for writing. Error: ", errorMessage)
+      return false
     end
+  
     file:write(latest_version_script)
     file:close()
+  
     return true
-end
+  end
+  
 
 -- Function to check for updates and apply them if necessary
 local function check_for_update()
