@@ -22,9 +22,9 @@
 - **Renata Glasc** [Q,W,E,R] -- REMOVED FOR RECODE
 - **Teemo** [Q,W,R]
 - **Zilean** [Q,W,E,R] -- REMOVED FOR RECODE
-
-
-
+ 
+ 
+ 
 ### Installation
 
 Place `vAIO.lua` into the `SLOTTED.CC"/lua directory`. Note that part of this directory path is unique to each user but follows a consistent naming scheme.
@@ -40,10 +40,9 @@ Once you have located the `C:\GhlOODPgOV==\lua` directory and downloaded `vAIO.l
 
 1. Open the `C:\GhlOODPgOV==\lua` directory in a File Explorer window.
 3. Move the `vAIO.lua` file into the above folder.
-
-
-
-
+ 
+ 
+ 
 **Open Source:** Embracing the spirit of community and collaboration, [vAIO] is fully open source. We welcome contributions, improvements, feedback, or to be simply used as a learning tool for the SLOTTED.CC community.
 
 ## Disclaimer
