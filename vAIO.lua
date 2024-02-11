@@ -88,6 +88,7 @@ local function check_for_prereqs()
 end
 
 check_for_update()
+check_for_prereqs()
 local vUtils = require("vUtils")
 
 function vLeona()
