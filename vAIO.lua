@@ -6,7 +6,7 @@
     
 ]]--
 
-local vAIO_VERSION = "1.0"
+local vAIO_VERSION = "1.1"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
@@ -97,9 +97,8 @@ check_for_prereqs()
 local vUtils = require("vUtils")
 
 cheat.on("renderer.draw", function()
-    -- Conditional rendering based on the update requirement
     if needsReloadAfterUpdate then
-        g_render:text(vec2:new(200, 200), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 50)
+        g_render:text(vec2:new(2000, 500), color:new(255, 209, 41), "Update successful! Reload [vAIO].", nil, 45)
     end
 end)
 
