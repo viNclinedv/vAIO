@@ -100,28 +100,21 @@ function vLeona()
     local w_config = g_config:add_bool(true, "Use W (Combo)")
     local e_config = g_config:add_bool(true, "Use E (Combo)")
     local r_config = g_config:add_bool(true, "Use R (Combo)")
-
     local q_harass_config = g_config:add_bool(true, "Use Q (Harass)")
     local w_harass_config = g_config:add_bool(true, "Use W (Harass)")
-
-    local e_acc_config = g_config:add_int(0, "E Accuracy")
-    local r_acc_config = g_config:add_int(0, "R Accuracy")
-
+    local e_acc_config = g_config:add_int(2, "E Accuracy") 
+    local r_acc_config = g_config:add_int(2, "R Accuracy") 
     local num_nmeR = g_config:add_int(2, "R If Enemies Hit >=")
-
     local assist_cast_e_config = g_config:add_bool(true, "Assist Cast E")
     local assist_cast_r_config = g_config:add_bool(true, "Assist Cast R")
-
-    local w_drawings_config = g_config:add_bool(true, "W Drawings")
-    local e_drawings_config = g_config:add_bool(true, "E Drawings")
-    local r_drawings_config = g_config:add_bool(true, "R Drawings")
+    local debug_config = g_config:add_bool(false, "Debug")
 
     local spell_sect = my_nav:add_section("Use Spells in Combo")
     local harass_sect = my_nav:add_section("Use Spells in Harass")
-    local acc_sect = my_nav:add_section("Accuracy Slider")
-    local draw_sect = my_nav:add_section("Drawings")
+    local acc_sect = my_nav:add_section("Accuracy Selection")
     local enemies_sect = my_nav:add_section("Enemies")
     local assist_cast_sect = my_nav:add_section("Assist Cast")
+    local debug_sect = my_nav:add_section("Debug")
 
     local checkboxq = spell_sect:checkbox("Use Q (Combo)", q_config)
     local checkboxw = spell_sect:checkbox("Use W (Combo)", w_config)
@@ -137,11 +130,6 @@ function vLeona()
     checkbox_harass_q:set_value(true)
     checkbox_harass_w:set_value(true)
 
-    local acc_e_slider = acc_sect:slider_int("E Accuracy", e_acc_config, 0, 5, 1)
-    local acc_r_slider = acc_sect:slider_int("R Accuracy", r_acc_config, 0, 5, 1)
-    acc_e_slider:set_value(2)
-    acc_r_slider:set_value(2)
-
     local rslider = enemies_sect:slider_int("R If Enemies Hit >=", num_nmeR, 1, 5, 1)
     rslider:set_value(2)
 
@@ -150,49 +138,24 @@ function vLeona()
     checkbox_assist_cast_e:set_value(true)
     checkbox_assist_cast_r:set_value(true)
 
-    local checkbox_w_drawings = draw_sect:checkbox("Draw W Range", w_drawings_config)
-    local checkbox_e_drawings = draw_sect:checkbox("Draw E Range", e_drawings_config)
-    local checkbox_r_drawings = draw_sect:checkbox("Draw R Range", r_drawings_config)
-    checkbox_w_drawings:set_value(false)
-    checkbox_e_drawings:set_value(false)
-    checkbox_r_drawings:set_value(false)
+    local checkbox_debug = debug_sect:checkbox("Debug", debug_config)
+    checkbox_debug:set_value(false)
 
-    cheat.register_callback(
-        "render",
-        function()
-            if
-                checkbox_w_drawings:get_value() == true and
-                    g_local:get_spell_book():get_spell_slot(e_spell_slot.w):is_ready()
-             then
-                darkpurple = color:new(57, 0, 70)
-                g_render:circle_3d(g_local.position, purple, 450, 2, 100, 2)
-            end
-        end
-    )
-    cheat.register_callback(
-        "render",
-        function()
-            if
-                checkbox_e_drawings:get_value() == true and
-                    g_local:get_spell_book():get_spell_slot(e_spell_slot.e):is_ready()
-             then
-                green = color:new(0, 255, 21)
-                g_render:circle_3d(g_local.position, green, 900, 2, 100, 2)
-            end
-        end
-    )
-    cheat.register_callback(
-        "render",
-        function()
-            if
-                checkbox_e_drawings:get_value() == true and
-                    g_local:get_spell_book():get_spell_slot(e_spell_slot.e):is_ready()
-             then
-                blue = color:new(76, 0, 255)
-                g_render:circle_3d(g_local.position, blue, 1200, 2, 100, 2)
-            end
-        end
-    )
+    local acc_e_select = acc_sect:select("E Accuracy", e_acc_config, {
+        "Low",
+        "Medium",
+        "High",
+        "Very High",
+        "Immobile",
+    })
+    local acc_r_select = acc_sect:select("R Accuracy", r_acc_config, {
+        "Low",
+        "Medium",
+        "High",
+        "Very High",
+        "Immobile",
+    })
+
 
     local mySpells = {
         q = {
@@ -244,79 +207,108 @@ function vLeona()
         }
     }
 
+    function debugUpdate() 
+        vUtils.debug = checkbox_debug:get_value() and 1 or 0
+    end
+    cheat.register_callback("feature",debugUpdate)
+
+
     function mySpells:qSpell()
         if vUtils.canCast(mySpells, "q") == false then
+            vUtils.Prints("Cant Cast Q - Cooldown or Mana Constraint")
             return
         end
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
-
-        if
-            (target == vUtils.Combo_key and checkboxq:get_value() == true) or
-                (target == vUtils.Harass_key and checkbox_harass_q:get_value() == true)
-         then
-            if target ~= nil and vUtils.getDistance(g_local.position, target.position) <= mySpells.q.Range then
-                if not features.orbwalker:should_reset_aa() then
-                    g_input:cast_spell(e_spell_slot.q)
-                    features.orbwalker:reset_aa_timer()
+        
+    
+        if (mode == vUtils.Combo_key and checkboxq:get_value() == true) or (mode == vUtils.Harass_key and checkbox_harass_q:get_value() == true) then
+            if target ~= nil then
+                vUtils.Prints("Target Acquired for Q Spell")
+                if vUtils.getDistance(g_local.position, target.position) <= mySpells.q.Range then
+                    vUtils.Prints("Target within Q Range")
+                    if not features.orbwalker:should_reset_aa() then
+                        g_input:cast_spell(e_spell_slot.q)
+                        features.orbwalker:reset_aa_timer()
+                        vUtils.Prints("Casting Q on Target")
+                    else
+                        vUtils.Prints("Q Cast Aborted - AA Reset Condition Not Met")
+                    end
+                else
+                    vUtils.Prints("Target out of Q Range")
                 end
+            else
+                vUtils.Prints("No Valid Target for Q Spell")
+            end
+        else
+            if mode == vUtils.Combo_key then
+                vUtils.Prints("Q Spell Skipped - Combo Mode Checkbox Unchecked or Not in Combo Mode")
+            elseif mode == vUtils.Harass_key then
+                vUtils.Prints("Q Spell Skipped - Harass Mode Checkbox Unchecked or Not in Harass Mode")
             end
         end
     end
+    
 
     function mySpells:wSpell()
         if vUtils.canCast(mySpells, "w") == false then
+            vUtils.Prints("Cant Cast W - Cooldown or Mana Constraint")
             return
         end
+        
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
-
-        if
-            (target == vUtils.Combo_key and checkboxw:get_value() == true) or
-                (target == vUtils.Harass_key and checkbox_harass_w:get_value() == true)
-         then
-            if target ~= nil and vUtils.getDistance(g_local.position, target.position) <= mySpells.w.Width then
-                g_input:cast_spell(e_spell_slot.w)
+        
+    
+        if (mode == vUtils.Combo_key and checkboxw:get_value() == true) or
+           (mode == vUtils.Harass_key and checkbox_harass_w:get_value() == true) then
+            if target ~= nil then
+                vUtils.Prints("Target Acquired for W Spell")
+                if vUtils.getDistance(g_local.position, target.position) <= mySpells['w'].Width then
+                    g_input:cast_spell(e_spell_slot.w)
+                    vUtils.Prints("Casting W on Target within Width")
+                else
+                    vUtils.Prints("Target out of W Width Range")
+                end
+            else
+                vUtils.Prints("No Valid Target for W Spell")
+            end
+        else
+            if mode == vUtils.Combo_key then
+                vUtils.Prints("W Spell Skipped - Combo Mode Checkbox Unchecked or Not in Combo Mode")
+            elseif mode == vUtils.Harass_key then
+                vUtils.Prints("W Spell Skipped - Harass Mode Checkbox Unchecked or Not in Harass Mode")
             end
         end
     end
+    
 
     function mySpells:eSpell()
         if vUtils.canCast(mySpells, "e") == false then
+            vUtils.Prints("Cannot Cast E - Spell on Cooldown or Insufficient Mana")
             return
         end
+        
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
-
+        
+    
         if checkbox_assist_cast_e:get_value() == true and g_input:is_key_pressed(69) then
             local cursorPos = g_input:get_cursor_position_game()
+            vUtils.Prints("Assist Cast E Key Pressed - Searching for Target")
             local bestTarget = nil
             local bestHitchance = -1
             local shortestCursorDistance = math.huge
-
-            local e_hitchance = {
-                immobile = 4,
-                very_high = 3,
-                high = 2,
-                medium = 1,
-                low = 0
-            }
-
-            for _, hitchanceLevel in ipairs(
-                {e_hitchance.immobile, e_hitchance.very_high, e_hitchance.high, e_hitchance.medium, e_hitchance.low}
-            ) do
+    
+            for _, hitchanceLevel in ipairs({4, 3, 2, 1, 0}) do
                 for _, entity in pairs(features.entity_list:get_enemies()) do
-                    if
-                        entity ~= nil and not entity:is_invisible() and entity:is_alive() and
-                            vUtils.getDistance(g_local.position, entity.position) <= mySpells["e"].Range
-                     then
+                    if entity ~= nil and not entity:is_invisible() and entity:is_alive() and
+                       vUtils.getDistance(g_local.position, entity.position) <= mySpells["e"].Range then
                         local pred = vUtils.predPosition(mySpells, "e", entity)
                         if pred.valid and pred.hitchance >= hitchanceLevel then
                             local distanceToCursor = vUtils.getDistance(cursorPos, entity.position)
-                            if
-                                distanceToCursor < shortestCursorDistance or
-                                    (pred.hitchance > bestHitchance and distanceToCursor <= shortestCursorDistance)
-                             then
+                            if distanceToCursor < shortestCursorDistance or
+                               (pred.hitchance > bestHitchance and distanceToCursor <= shortestCursorDistance) then
                                 bestHitchance = pred.hitchance
                                 shortestCursorDistance = distanceToCursor
                                 bestTarget = entity
@@ -325,73 +317,79 @@ function vLeona()
                     end
                 end
                 if bestTarget then
+                    vUtils.Prints("Best Target Found for Assist Cast E - Hitchance: " .. tostring(bestHitchance))
                     break
                 end
             end
             if bestTarget then
                 g_input:cast_spell(e_spell_slot.e, bestTarget.position)
+                vUtils.Prints("Casting E on Assist Cast Target")
+            else
+                vUtils.Prints("No Suitable Target Found for Assist Cast E")
             end
         end
-
+    
         if mode == vUtils.Combo_key and checkboxe:get_value() == true then
+            vUtils.Prints("E Spell in Combo Mode - Searching for Target")
             local eRange = mySpells["e"].Range + 150
             local bestTarget = nil
             local highestMetric = -1
-
+    
             for _, target in pairs(features.entity_list:get_enemies()) do
-                if
-                    target ~= nil and not target:is_invisible() and target:is_alive() and
-                        vUtils.getDistance(g_local.position, target.position) <= eRange
-                 then
+                if target ~= nil and not target:is_invisible() and target:is_alive() and
+                   vUtils.getDistance(g_local.position, target.position) <= eRange then
                     local totalAttackSpeed = target.attack_speed
                     local totalAttackDamage = target.base_attack + target.bonus_attack
-                    local weightAS = 0.5
-                    local weightAD = 0.5
-                    local combinedMetric = (totalAttackSpeed * weightAS) + (totalAttackDamage * weightAD)
-
+                    local combinedMetric = (totalAttackSpeed * 0.5) + (totalAttackDamage * 0.5)
                     if combinedMetric > highestMetric then
                         highestMetric = combinedMetric
                         bestTarget = target
                     end
                 end
             end
-
+    
             if bestTarget then
                 local eHit = vUtils.predPosition(mySpells, "e", bestTarget)
-                if eHit.valid and eHit.hitchance >= acc_e_slider:get_value() then
+                if eHit.valid and eHit.hitchance >= acc_e_select:get_value() then
                     g_input:cast_spell(e_spell_slot.e, eHit.position)
+                    vUtils.Prints("Casting E in Combo Mode on Target with High Metric")
+                else
+                    vUtils.Prints("Combo Mode E Cast Aborted - Hitchance or Prediction Invalid")
                 end
+            else
+                vUtils.Prints("No Suitable Target Found for E Spell in Combo Mode")
             end
         end
     end
+    
 
     function mySpells:rSpell()
         if vUtils.canCast(mySpells, "r") == false then
+            vUtils.Prints("Cannot Cast R - Spell on Cooldown or Insufficient Mana")
             return
         end
+        
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
-
+    
         if checkbox_assist_cast_r:get_value() == true and g_input:is_key_pressed(82) then
+            vUtils.Prints("Assist Cast R Key Pressed - Searching for Target")
             local cursorPos = g_input:get_cursor_position_game()
             local bestTarget = nil
             local bestHitchance = -1
             local shortestCursorDistance = math.huge
             local RnumTarget = vUtils.NumEnemiesInRangeTarget(325)
-
+    
             if RnumTarget >= rslider:get_value() then
+                vUtils.Prints("Sufficient Targets within Range for R Spell")
                 for _, entity in pairs(features.entity_list:get_enemies()) do
-                    if
-                        entity ~= nil and not entity:is_invisible() and entity:is_alive() and
-                            vUtils.getDistance(g_local.position, entity.position) <= mySpells["r"].Range
-                     then
+                    if entity ~= nil and not entity:is_invisible() and entity:is_alive() and
+                       vUtils.getDistance(g_local.position, entity.position) <= mySpells["r"].Range then
                         local pred = vUtils.predPosition(mySpells, "r", entity)
                         if pred.valid and pred.hitchance >= bestHitchance then
                             local distanceToCursor = vUtils.getDistance(cursorPos, entity.position)
-                            if
-                                distanceToCursor < shortestCursorDistance or
-                                    (pred.hitchance > bestHitchance and distanceToCursor <= shortestCursorDistance)
-                             then
+                            if distanceToCursor < shortestCursorDistance or
+                               (pred.hitchance > bestHitchance and distanceToCursor <= shortestCursorDistance) then
                                 bestHitchance = pred.hitchance
                                 shortestCursorDistance = distanceToCursor
                                 bestTarget = entity
@@ -401,55 +399,39 @@ function vLeona()
                 end
                 if bestTarget then
                     g_input:cast_spell(e_spell_slot.r, bestTarget.position)
+                    vUtils.Prints("Casting R on Assist Cast Target with Best Hitchance")
                     return
+                else
+                    vUtils.Prints("No Suitable Target Found for Assist Cast R")
                 end
+            else
+                vUtils.Prints("Not Enough Targets within Range for R Spell")
             end
         end
-
-        if mode == vUtils.Combo_key and checkboxr:get_value() == true and g_input:is_key_pressed(17) then
-            local rRange = mySpells["r"].Range
-            local bestTarget = nil
-            local highestMetric = -1
-
-            for _, target in pairs(features.entity_list:get_enemies()) do
-                if
-                    target ~= nil and not target:is_invisible() and target:is_alive() and
-                        vUtils.getDistance(g_local.position, target.position) <= rRange
-                 then
-                    local totalAttackSpeed = target.attack_speed
-                    local totalAttackDamage = target.bonus_attack + target.base_attack
-                    local weightAS = 0.5
-                    local weightAD = 0.5
-                    local combinedMetric = (totalAttackSpeed * weightAS) + (totalAttackDamage * weightAD)
-
-                    if combinedMetric > highestMetric then
-                        highestMetric = combinedMetric
-                        bestTarget = target
-                    end
-                end
-            end
-
-            if bestTarget then
-                local rHit = vUtils.predPosition(mySpells, "r", bestTarget)
-                if rHit.valid and rHit.hitchance >= acc_r_slider:get_value() then
-                    g_input:cast_spell(e_spell_slot.r, rHit.position)
-                    return
-                end
-            end
-        end
-
+    
         if mode == vUtils.Combo_key and checkboxr:get_value() == true then
+            vUtils.Prints("Combo Mode Activated for R Spell")
             local RnumTarget = vUtils.NumEnemiesInRangeTarget(325)
             if RnumTarget >= rslider:get_value() then
+                vUtils.Prints("Checking Targets for R Spell in Combo Mode")
                 if target and vUtils.getDistance(g_local.position, target.position) <= mySpells["r"].Range then
                     local rHit = vUtils.predPosition(mySpells, "r", target)
-                    if rHit.valid and rHit.hitchance >= acc_r_slider:get_value() then
+                    if rHit.valid and rHit.hitchance >= acc_r_select:get_value() then
                         g_input:cast_spell(e_spell_slot.r, rHit.position)
+                        vUtils.Prints("Casting R in Combo Mode on Target with High Hitchance")
+                        return
+                    else
+                        vUtils.Prints("Combo Mode R Cast Aborted - Invalid Prediction or Hitchance Too Low")
                     end
+                else
+                    vUtils.Prints("No Suitable Target Found for R Spell in Combo Mode")
                 end
+            else
+                vUtils.Prints("Not Enough Targets for R Spell Activation in Combo Mode")
             end
         end
     end
+    
 
     cheat.register_module(
         {
@@ -488,7 +470,7 @@ function vTeemo()
     local flee_sect = my_nav:add_section("Use Spells in Flee")
     local antigapclose_sect = my_nav:add_section("Anti-Gapclose")
     local assist_cast_sect = my_nav:add_section("Assist Cast")
-    local drawings_sect = my_nav:add_section("Drawings")
+    local debug_sect = my_nav:add_section("Debug")
 
     local q_config = g_config:add_bool(true, "Use Q in Combo")
     local w_config = g_config:add_bool(true, "Use W in Combo", true)
@@ -496,10 +478,10 @@ function vTeemo()
     local w_harass_config = g_config:add_bool(false, "Use W in Harass")
     local w_flee_config = g_config:add_bool(true, "Use W in Flee")
     local w_evade_config = g_config:add_bool(true, "Use W to Evade")
-    local q_drawings_config = g_config:add_bool(true, "Draw Q Range")
     local w_antigapclose_config = g_config:add_bool(true, "W Anti-Gapclose")
     local r_antigapclose_config = g_config:add_bool(true, "R Anti-Gapclose")
     local assist_cast_q_config = g_config:add_bool(true, "Assist Cast Q")
+    local debug_config = g_config:add_bool(false, "Debug")
 
     local checkbox_q_combo = spell_sect:checkbox("Use Q (Combo)", q_config)
     local checkbox_w_combo = spell_sect:checkbox("Use W (Combo)", w_config)
@@ -524,8 +506,14 @@ function vTeemo()
     local checkbox_assist_cast_q = assist_cast_sect:checkbox("Assist Cast Q", assist_cast_q_config)
     checkbox_assist_cast_q:set_value(true)
 
-    local checkbox_q_drawings = drawings_sect:checkbox("Draw Q Range", q_drawings_config)
-    checkbox_q_drawings:set_value(true)
+    local checkbox_debug = debug_sect:checkbox("Debug", debug_config)
+    checkbox_debug:set_value(false)
+
+
+    function debugUpdate() 
+        vUtils.debug = checkbox_debug:get_value() and 1 or 0
+    end
+    cheat.register_callback("feature",debugUpdate)
 
     local mySpells = {
         q = {
@@ -552,48 +540,43 @@ function vTeemo()
         }
     }
 
-    cheat.register_callback(
-        "render",
-        function()
-            if checkbox_q_drawings:get_value() then
-                local color = color:new(201, 7, 245)
-                g_render:circle_3d(g_local.position, color, mySpells.q.Range, 2, 100, 2)
-            end
-        end
-    )
 
     cheat.register_module(
         {
             champion_name = "Teemo",
             spell_q = function()
                 if vUtils.canCast(mySpells, "q") == false then
+                    vUtils.Prints("Q Spell: Not available for casting (cooldown or mana)")
                     return
                 end
+            
                 target = features.target_selector:get_default_target()
                 mode = features.orbwalker:get_mode()
-
+            
                 if g_input:is_key_pressed(81) and checkbox_assist_cast_q:get_value() == true then
+                    vUtils.Prints("Q Spell: Assist cast mode activated")
                     local cursorPos = g_input:get_cursor_position_game()
                     local shortestDistance = math.huge
                     local closestEnemy = nil
-
+            
                     for _, entity in pairs(features.entity_list:get_enemies()) do
                         if entity ~= nil and not entity:is_invisible() and entity:is_alive() then
                             local distanceToCursor = vUtils.getDistance(cursorPos, entity.position)
-
                             if distanceToCursor < shortestDistance then
                                 closestEnemy = entity
                                 shortestDistance = distanceToCursor
                             end
                         end
                     end
-
+            
                     if closestEnemy ~= nil then
                         g_input:cast_spell(e_spell_slot.q, closestEnemy.network_id)
+                        vUtils.Prints("Q Spell: Cast on closest enemy to cursor")
                     else
+                        vUtils.Prints("Q Spell: No enemies close to cursor found")
                     end
                 end
-
+            
                 local highestMetric = 0
                 local extendedRange = mySpells["q"].Range + 200
                 for _, target in pairs(features.entity_list:get_enemies()) do
@@ -605,91 +588,96 @@ function vTeemo()
                         end
                     end
                 end
-                if
-                    bestTarget ~= nil and mode == vUtils.Combo_key and checkbox_q_combo:get_value() == true and
-                        features.orbwalker:should_reset_aa() == true
-                 then
+            
+                if bestTarget ~= nil and mode == vUtils.Combo_key and checkbox_q_combo:get_value() == true and
+                   features.orbwalker:should_reset_aa() == true then
                     g_input:cast_spell(e_spell_slot.q, bestTarget.network_id)
                     features.orbwalker:set_cast_time(0.25)
+                    vUtils.Prints("Q Spell: Cast in combo mode on target with highest metric")
                     return true
                 end
-
+            
                 if target ~= nil and features.orbwalker:is_attackable(target.index, mySpells["q"].Range, true) then
-                    if
-                        mode == vUtils.Harass_key and checkbox_q_harass:get_value() == true and
-                            features.orbwalker:should_reset_aa() == true
-                     then
+                    if mode == vUtils.Harass_key and checkbox_q_harass:get_value() == true and
+                       features.orbwalker:should_reset_aa() == true then
                         g_input:cast_spell(e_spell_slot.q, target.network_id)
                         features.orbwalker:set_cast_time(0.25)
+                        vUtils.Prints("Q Spell: Cast in harass mode on attackable target")
                         return true
                     end
                 end
+            
+                vUtils.Prints("Q Spell: No conditions met for casting")
             end,
+            
             spell_w = function()
                 if vUtils.canCast(mySpells, "w") == false then
+                    vUtils.Prints("W Spell: Not available for casting (cooldown or mana)")
                     return
                 end
+            
                 target = features.target_selector:get_default_target()
                 mode = features.orbwalker:get_mode()
-
+            
                 if checkbox_w_evade:get_value() == true then
                     if features.evade:is_active() and features.evade:is_position_safe(g_local.position, false) then
                         g_input:cast_spell(e_spell_slot.w)
+                        vUtils.Prints("W Spell: Cast for evasion")
                         return true
                     end
                 end
-
-                if
-                    checkbox_w_antigapclose:get_value() == true and target == vUtils.Combo_key or
-                        target == vUtils.Harass_key
-                 then
+            
+                if checkbox_w_antigapclose:get_value() == true and (target == vUtils.Combo_key or target == vUtils.Harass_key) then
                     local antigapclosetarget = features.target_selector:get_antigapclose_target(400)
-                    if antigapclosetarget ~= nil then
-                        if vUtils.getDistance(antigapclosetarget.position, g_local.position) <= 400 then
-                            g_input:cast_spell(e_spell_slot.w)
-                            return true
-                        end
-                    end
-                end
-
-                if target ~= nil and features.orbwalker:is_attackable(target.index, mySpells["q"].Range, true) then
-                    if
-                        mode == vUtils.Combo_key and checkbox_w_combo:get_value() == true and
-                            g_local.movement_speed < target.movement_speed
-                     then
+                    if antigapclosetarget ~= nil and vUtils.getDistance(antigapclosetarget.position, g_local.position) <= 400 then
                         g_input:cast_spell(e_spell_slot.w)
+                        vUtils.Prints("W Spell: Cast for anti-gapclose")
                         return true
                     end
                 end
-
+            
                 if target ~= nil and features.orbwalker:is_attackable(target.index, mySpells["q"].Range, true) then
-                    if
-                        mode == vUtils.Flee_key and checkbox_w_flee:get_value() == true and
-                            g_local.movement_speed < target.movement_speed
-                     then
+                    if mode == vUtils.Combo_key and checkbox_w_combo:get_value() == true and g_local.movement_speed < target.movement_speed then
                         g_input:cast_spell(e_spell_slot.w)
+                        vUtils.Prints("W Spell: Cast in combo mode to match target's speed")
                         return true
                     end
                 end
+            
+                if target ~= nil and features.orbwalker:is_attackable(target.index, mySpells["q"].Range, true) then
+                    if mode == vUtils.Flee_key and checkbox_w_flee:get_value() == true and g_local.movement_speed < target.movement_speed then
+                        g_input:cast_spell(e_spell_slot.w)
+                        vUtils.Prints("W Spell: Cast in flee mode for speed advantage")
+                        return true
+                    end
+                end
+            
+                vUtils.Prints("W Spell: No conditions met for casting")
             end,
+            
             spell_r = function()
                 if vUtils.canCast(mySpells, "r") == false then
+                    vUtils.Prints("R Spell: Not available for casting (cooldown or mana)")
                     return
                 end
+            
                 target = features.target_selector:get_default_target()
                 mode = features.orbwalker:get_mode()
-
-                if
-                    checkbox_r_antigapclose:get_value() == true and target == vUtils.Combo_key or
-                        target == vUtils.Harass_key
-                 then
+            
+                if checkbox_r_antigapclose:get_value() == true and (target == vUtils.Combo_key or target == vUtils.Harass_key) then
                     local antigapclosetarget = features.target_selector:get_antigapclose_target(400)
                     if antigapclosetarget ~= nil then
                         g_input:cast_spell(e_spell_slot.r, antigapclosetarget.path_end)
+                        vUtils.Prints("R Spell: Cast for anti-gapclose on " .. antigapclosetarget.name)
                         return true
+                    else
+                        vUtils.Prints("R Spell: No suitable targets found for anti-gapclose")
                     end
+                else
+                    vUtils.Prints("R Spell: Anti-gapclose condition not met or disabled")
                 end
             end,
+            
             get_priorities = function()
                 return {
                     "spell_q",
