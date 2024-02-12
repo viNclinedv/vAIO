@@ -13,6 +13,8 @@ local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
 local vUTILS_LUA_NAME = "vUtils.lua"
 local vUTILS_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vUtils/main/"
 local vUTILS_REPO_SCRIPT_PATH = vUTILS_REPO_BASE_URL .. vUTILS_LUA_NAME
+local needsReloadAfterUpdate = false
+
 
 local function fetch_url(url)
     local handle = io.popen("curl -s -H 'Cache-Control: no-cache' " .. url)
@@ -51,12 +53,10 @@ local function check_for_update()
         return
     end
 
-    print("Local [vAIO] version: " .. vAIO_VERSION .. ", Remote [vAIO] version: " .. remote_version)
     if remote_version and remote_version > vAIO_VERSION then
-        print("Updating from version " .. vAIO_VERSION .. " to " .. remote_version)
         if replace_current_file_with_latest_version(latest_script_content) then
             print("Update successful. Please reload [vAIO].")
-            g_render:text(vec2:new(50, 50), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 50)
+            needsReloadAfterUpdate = true
         else
             print("Failed to update [vAIO].")
         end
@@ -64,6 +64,7 @@ local function check_for_update()
         print("You are running the latest version of [vAIO].")
     end
 end
+
 
 
 local function check_for_prereqs()
@@ -94,6 +95,14 @@ end
 check_for_update()
 check_for_prereqs()
 local vUtils = require("vUtils")
+
+cheat.on("renderer.draw", function()
+    -- Conditional rendering based on the update requirement
+    if needsReloadAfterUpdate then
+        g_render:text(vec2:new(50, 50), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 20)
+    end
+end)
+
 
 function vLeona()
     Script_name = "vLeona"
