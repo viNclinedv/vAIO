@@ -44,16 +44,19 @@ local function check_for_update()
         print("Failed to fetch [vAIO] for update check.")
         return
     end
+
     local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
     if not remote_version then
         print("Failed to extract version from the latest [vAIO] content.")
         return
     end
+
     print("Local [vAIO] version: " .. vAIO_VERSION .. ", Remote [vAIO] version: " .. remote_version)
     if remote_version and remote_version > vAIO_VERSION then
         print("Updating from version " .. vAIO_VERSION .. " to " .. remote_version)
         if replace_current_file_with_latest_version(latest_script_content) then
             print("Update successful. Please reload [vAIO].")
+            g_render:text(vec2:new(50, 50), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 50)
         else
             print("Failed to update [vAIO].")
         end
@@ -61,6 +64,7 @@ local function check_for_update()
         print("You are running the latest version of [vAIO].")
     end
 end
+
 
 local function check_for_prereqs()
     local resources_path = cheat:get_resource_path()
