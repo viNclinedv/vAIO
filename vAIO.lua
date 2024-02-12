@@ -99,7 +99,7 @@ local vUtils = require("vUtils")
 cheat.on("renderer.draw", function()
     -- Conditional rendering based on the update requirement
     if needsReloadAfterUpdate then
-        g_render:text(vec2:new(50, 50), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 20)
+        g_render:text(vec2:new(200, 200), color:new(0, 255, 0), "Update successful! Reload [vAIO].", nil, 50)
     end
 end)
 
