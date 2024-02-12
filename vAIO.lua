@@ -6,7 +6,7 @@
     
 ]]--
 
-local vAIO_VERSION = "1.1"
+local vAIO_VERSION = "1.2"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
@@ -98,7 +98,8 @@ local vUtils = require("vUtils")
 
 cheat.on("renderer.draw", function()
     if needsReloadAfterUpdate then
-        g_render:text(vec2:new(2000, 500), color:new(255, 209, 41), "Update successful! Reload [vAIO].", nil, 45)
+        local currentColor = vUtils.updateRGBColor()
+        g_render:text(vec2:new(2000, 500),color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "Update successful! Reload [vAIO]", nil, 45)
     end
 end)
 
@@ -120,6 +121,9 @@ function vLeona()
     local assist_cast_e_config = g_config:add_bool(true, "Assist Cast E")
     local assist_cast_r_config = g_config:add_bool(true, "Assist Cast R")
     local debug_config = g_config:add_bool(false, "Debug")
+    local e_draw_config = g_config:add_bool(false, "E Drawings")
+    local r_draw_config = g_config:add_bool(false, "R Drawings")
+    local watermark_draw_config = g_config:add_bool(false, "Watermark Drawings")
 
     local spell_sect = my_nav:add_section("Use Spells in Combo")
     local harass_sect = my_nav:add_section("Use Spells in Harass")
@@ -127,6 +131,7 @@ function vLeona()
     local enemies_sect = my_nav:add_section("Enemies")
     local assist_cast_sect = my_nav:add_section("Assist Cast")
     local debug_sect = my_nav:add_section("Debug")
+    local draw_sect = my_nav:add_section("Drawings")
 
     local checkboxq = spell_sect:checkbox("Use Q (Combo)", q_config)
     local checkboxw = spell_sect:checkbox("Use W (Combo)", w_config)
@@ -152,6 +157,13 @@ function vLeona()
 
     local checkbox_debug = debug_sect:checkbox("Debug", debug_config)
     checkbox_debug:set_value(false)
+
+    local checkboxwatermarkdraw = draw_sect:checkbox("Draw Watermark", watermark_draw_config)
+    local checkboxedraw = draw_sect:checkbox("Draw E Range", e_draw_config)
+    local checkboxrdraw = draw_sect:checkbox("Draw R Range", r_draw_config)
+    checkboxwatermarkdraw:set_value(true)
+    checkboxedraw:set_value(true)
+    checkboxrdraw:set_value(true)
 
     local acc_e_select = acc_sect:select("E Accuracy", e_acc_config, {
         "Low",
@@ -222,8 +234,27 @@ function vLeona()
     function debugUpdate() 
         vUtils.debug = checkbox_debug:get_value() and 1 or 0
     end
-    cheat.register_callback("feature",debugUpdate)
+    cheat.register_callback("feature", debugUpdate)
 
+    cheat.on("renderer.draw", function()
+        local currentColor = vUtils.updateRGBColor()
+        if checkboxwatermarkdraw:get_value() == true then
+            g_render:text(vec2:new(10, 10), color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "[vLeona]", nil, 30)
+        end
+
+        if checkboxedraw:get_value() == true then
+            if vUtils.canCast(mySpells, "e") == true then
+                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["e"].Range, 2, 360, 2)
+            end
+        end
+
+        if checkboxrdraw:get_value() == true then
+            if vUtils.canCast(mySpells, "r") == true then
+                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["r"].Range, 2, 360, 2)
+            end
+        end
+
+    end)
 
     function mySpells:qSpell()
         if vUtils.canCast(mySpells, "q") == false then
@@ -384,6 +415,39 @@ function vLeona()
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
     
+        local bestTarget = nil
+        local highestMetric = -1
+    
+        if mode == vUtils.Combo_key and checkboxr:get_value() == true and g_input:is_key_pressed(17) then
+            vUtils.Prints("R Spell in Combo Mode with CTRL Key Pressed - Searching for Target")
+            
+            for _, target in pairs(features.entity_list:get_enemies()) do
+                if target ~= nil and not target:is_invisible() and target:is_alive() and
+                vUtils.getDistance(g_local.position, target.position) <= mySpells["r"].Range then
+                    local totalAttackSpeed = target.attack_speed
+                    local totalAttackDamage = target.base_attack + target.bonus_attack
+                    local combinedMetric = (totalAttackSpeed * 0.5) + (totalAttackDamage * 0.5)
+                    
+                    if combinedMetric > highestMetric then
+                        highestMetric = combinedMetric
+                        bestTarget = target
+                    end
+                end
+            end
+            
+            if bestTarget then
+                local rHit = vUtils.predPosition(mySpells, "r", bestTarget)
+                if rHit.valid and rHit.hitchance >= acc_r_select:get_value() then
+                    g_input:cast_spell(e_spell_slot.r, rHit.position)
+                    vUtils.Prints("Casting R in Combo Mode with CTRL Key Pressed on Target with High Metric")
+                else
+                    vUtils.Prints("Combo Mode R Cast Aborted - Invalid Prediction or Hitchance Too Low")
+                end
+            else
+                vUtils.Prints("No Suitable Target Found for R Spell in Combo Mode with CTRL Key Pressed")
+            end
+        end
+
         if checkbox_assist_cast_r:get_value() == true and g_input:is_key_pressed(82) then
             vUtils.Prints("Assist Cast R Key Pressed - Searching for Target")
             local cursorPos = g_input:get_cursor_position_game()
@@ -442,7 +506,11 @@ function vLeona()
                 vUtils.Prints("Not Enough Targets for R Spell Activation in Combo Mode")
             end
         end
+
+        
+
     end
+
     
 
     cheat.register_module(
@@ -483,6 +551,7 @@ function vTeemo()
     local antigapclose_sect = my_nav:add_section("Anti-Gapclose")
     local assist_cast_sect = my_nav:add_section("Assist Cast")
     local debug_sect = my_nav:add_section("Debug")
+    local draw_sect = my_nav:add_section("Drawings")
 
     local q_config = g_config:add_bool(true, "Use Q in Combo")
     local w_config = g_config:add_bool(true, "Use W in Combo", true)
@@ -494,6 +563,8 @@ function vTeemo()
     local r_antigapclose_config = g_config:add_bool(true, "R Anti-Gapclose")
     local assist_cast_q_config = g_config:add_bool(true, "Assist Cast Q")
     local debug_config = g_config:add_bool(false, "Debug")
+    local q_draw_config = g_config:add_bool(false, "Q Drawings")
+    local watermark_draw_config = g_config:add_bool(false, "Watermark Drawings")
 
     local checkbox_q_combo = spell_sect:checkbox("Use Q (Combo)", q_config)
     local checkbox_w_combo = spell_sect:checkbox("Use W (Combo)", w_config)
@@ -521,11 +592,30 @@ function vTeemo()
     local checkbox_debug = debug_sect:checkbox("Debug", debug_config)
     checkbox_debug:set_value(false)
 
+    local checkboxwatermarkdraw = draw_sect:checkbox("Draw Watermark", watermark_draw_config)
+    local checkboxqdraw = draw_sect:checkbox("Draw Q Range", q_draw_config)
+    checkboxwatermarkdraw:set_value(true)
+    checkboxqdraw:set_value(true)
+
 
     function debugUpdate() 
         vUtils.debug = checkbox_debug:get_value() and 1 or 0
     end
     cheat.register_callback("feature",debugUpdate)
+
+    cheat.on("renderer.draw", function()
+        local currentColor = vUtils.updateRGBColor()
+        if checkboxwatermarkdraw:get_value() == true then
+            g_render:text(vec2:new(10, 10), color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "[vTeemo]", nil, 30)
+        end
+
+        if checkboxqdraw:get_value() == true then
+            if vUtils.canCast(mySpells, "q") == true then
+                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["q"].Range, 2, 360, 2)
+            end
+        end
+
+    end)
 
     local mySpells = {
         q = {
