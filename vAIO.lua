@@ -10,7 +10,7 @@ local vAIO_VERSION = "1.4"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
-local vAIO_LOGO_NAME = "[vAIO]Logo.png"
+local vAIO_LOGO_NAME = "vAIO_Logo.png"
 local vAIO_LOGO_PATH = vAIO_REPO_BASE_URL .. vAIO_LOGO_NAME
 local vUTILS_LUA_NAME = "vUtils.lua"
 local vUTILS_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vUtils/main/"
@@ -30,28 +30,30 @@ local function fetch_url(url)
         return content
 end
 local function download_image(url, output_path)
-    local curl_command = string.format("curl -s -H 'Cache-Control: no-cache' -o '%s' '%s'", output_path, url)
-    local handle = io.popen(curl_command)
-    if not handle then
-        print("Failed to initiate download for the image: " .. url)
+    local curl_command = string.format('curl.exe -s -L -o "%s" "%s"', output_path, url)
+    
+    print("Downloading image with command: " .. curl_command)
+    
+    local result, exit, code = os.execute(curl_command)
+    
+    if not result or code ~= 0 then
+        print("Failed to download image. Command exit code: ", code)
         return false
     end
-    local result = handle:read("*a")
-    handle:close()
-
+    
     local file = io.open(output_path, "rb")
     if file then
-        local content = file:read("*a")
+        print("[vAIO]Logo downloaded and saved successfully at: " .. output_path)
         file:close()
-        if content and #content > 0 then
-            print("[vAIO]Logo downloaded and saved successfully at: " .. output_path)
-            return true
-        end
+        return true
+    else
+        print("Failed to open the downloaded file: " .. output_path)
+        return false
     end
-
-    print("Failed to download image from: " .. url)
-    return false
 end
+
+
+
 
 local function replace_current_file_with_latest_version(latest_version_script)
     if skipUpdate == true then print("Skipping Update for vAIO") end
