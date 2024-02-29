@@ -6,16 +6,18 @@
     
 ]]--
 
-local vAIO_VERSION = "1.4"
+local vAIO_VERSION = "1.5"
 local vAIO_LUA_NAME = "vAIO.lua"
-local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
-local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
+local REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
+local vAIO_REPO_SCRIPT_PATH = REPO_BASE_URL .. vAIO_LUA_NAME
 local vAIO_LOGO_NAME = "vAIO_Logo.png"
-local vAIO_LOGO_PATH = vAIO_REPO_BASE_URL .. vAIO_LOGO_NAME
+local vAIO_LOGO_PATH = REPO_BASE_URL .. "Assets/" .. vAIO_LOGO_NAME
 local vUTILS_LUA_NAME = "vUtils.lua"
 local vUTILS_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vUtils/main/"
 local vUTILS_REPO_SCRIPT_PATH = vUTILS_REPO_BASE_URL .. vUTILS_LUA_NAME
+
 local needsReloadAfterUpdate = false
+local needsSlottedReloadAfterUpdate = false
 local skipUpdate = false
 
 
@@ -32,14 +34,7 @@ end
 local function download_image(url, output_path)
     local curl_command = string.format('curl.exe -s -L -o "%s" "%s"', output_path, url)
     
-    print("Downloading image with command: " .. curl_command)
-    
     local result, exit, code = os.execute(curl_command)
-    
-    if not result or code ~= 0 then
-        print("Failed to download image. Command exit code: ", code)
-        return false
-    end
     
     local file = io.open(output_path, "rb")
     if file then
@@ -51,10 +46,6 @@ local function download_image(url, output_path)
         return false
     end
 end
-
-
-
-
 local function replace_current_file_with_latest_version(latest_version_script)
     if skipUpdate == true then print("Skipping Update for vAIO") end
 
@@ -71,7 +62,6 @@ local function replace_current_file_with_latest_version(latest_version_script)
         return true
     end
 end
-
 local function check_for_update()
     local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
     local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
@@ -106,9 +96,6 @@ local function check_for_update()
         end
     end
 end
-
-
-
 local function check_for_prereqs()
     local resources_path = cheat:get_resource_path()
     local vUtils_path = resources_path:gsub("resources$", "lua\\lib\\" .. vUTILS_LUA_NAME)
@@ -146,6 +133,37 @@ local function check_for_prereqs()
         logo_file:close()
         print("[vAIO]Logo found.")
     end
+    
+    local fonts = {
+        {name = "Queensides", url = REPO_BASE_URL .. "Assets/Queensides.ttf", path = resources_path:gsub("resources$", "fonts\\Queensides.ttf")},
+        {name = "QueensidesLight", url = REPO_BASE_URL .. "Assets/QueensidesLight.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesLight.ttf")},
+        {name = "QueensidesMedium", url = REPO_BASE_URL .. "Assets/QueensidesMedium.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesMedium.ttf")},
+    }
+
+    for _, font in ipairs(fonts) do
+        local font_file = io.open(font.path, "r")
+        if not font_file then
+            print("[" .. font.name .. "] font not found. Downloading...")
+            local content = fetch_url(font.url)
+            if content then
+                local file, errorMessage = io.open(font.path, "w")
+                if file then
+                    file:write(content)
+                    file:close()
+                    print("[" .. font.name .. "] font downloaded and saved successfully.")
+                    needsSlottedReloadAfterUpdate = true
+                else
+                    print("Failed to save [" .. font.name .. "] font. Error: ", errorMessage)
+                end
+            else
+                print("Failed to download [" .. font.name .. "] font.")
+            end
+        else
+            font_file:close()
+            print("[" .. font.name .. "] font found.")
+        end
+    end
+
 end
 
 
@@ -153,12 +171,15 @@ check_for_update()
 check_for_prereqs()
 local vUtils = require("vUtils")
 
-cheat.on("renderer.draw", function()
+cheat.on("features.run", function()
         vUtils.menu()
 end)
 cheat.on("renderer.draw", function()
     if needsReloadAfterUpdate then
         g_render:text(vec2:new(2000, 500),color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "Update successful! Reload [vAIO]", nil, 45)
+    end
+    if needsSlottedReloadAfterUpdate then
+        g_render:text(vec2:new(2000, 500),color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "Critical assets donwloaded! Please Restart Slotted.CC", nil, 45)
     end
 end)
 
@@ -300,68 +321,21 @@ function vLeona()
 
 
         if checkboxwatermarkdraw:get_value() == true then
-            g_render:text(vec2:new(13.2, 137), color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "[vLeona]", nil, 30)
+            vUtils.text(13.2, 137, "[vLeona]", "QueensidesMedium", 30, true)
             if logo ~= nil then
                 g_render:image(vec2:new(-60, -50), vec2:new(240, 240), logo)
             end
         end
 
-        --beta Glow E, porting to vUtils soon
         if checkboxedraw:get_value() == true then
             if vUtils.canCast(mySpells, "e") == true then
-                g_render:circle_3d(g_local.position, color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), mySpells["e"].Range, 2, 99999999999, 2.25)
-                local startAlpha = 8
-                local startThickness = 4
-                local maxThickness = 19
-                local minAlpha = 1
-                local totalLayers = 6
-
-                local alphaDecrement = (startAlpha - minAlpha) / totalLayers
-                local thicknessIncrement = (maxThickness - startThickness) / totalLayers
-
-                for i = 1, totalLayers do
-                    local alpha = math.max(startAlpha - (alphaDecrement * i), minAlpha)
-                    local thickness = math.min(startThickness + (thicknessIncrement * i), maxThickness)
-
-                    g_render:circle_3d(
-                        g_local.position, 
-                        color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, alpha), 
-                        mySpells["e"].Range, 
-                        2, 
-                        360, 
-                        thickness
-                    )
-                end
+                vUtils.circle_3d(g_local.position, mySpells["e"].Range, 2, 2.25, true )
             end
         end
 
-        --beta glow r, porting to vUtils soon
         if checkboxrdraw:get_value() == true then
             if vUtils.canCast(mySpells, "r") == true then
-                g_render:circle_3d(g_local.position, color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), mySpells["r"].Range, 2, 99999999999, 2.25)
-
-                local startAlpha = 8
-                local startThickness = 4
-                local maxThickness = 19
-                local minAlpha = 1
-                local totalLayers = 6
-
-                local alphaDecrement = (startAlpha - minAlpha) / totalLayers
-                local thicknessIncrement = (maxThickness - startThickness) / totalLayers
-
-                for i = 1, totalLayers do
-                    local alpha = math.max(startAlpha - (alphaDecrement * i), minAlpha)
-                    local thickness = math.min(startThickness + (thicknessIncrement * i), maxThickness)
-
-                    g_render:circle_3d(
-                        g_local.position, 
-                        color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, alpha), 
-                        mySpells["r"].Range, 
-                        2, 
-                        360, 
-                        thickness
-                    )
-                end
+                vUtils.circle_3d(g_local.position, mySpells["r"].Range, 2, 2.25, true )
             end
         end
     end)
@@ -1049,13 +1023,21 @@ function vTeemo()
     cheat.register_callback("feature",debugUpdate)
 
     cheat.on("renderer.draw", function()
+        local resources_path = cheat:get_resource_path()
+        local logo_path = resources_path:gsub("resources$", "lua\\lib\\" .. vAIO_LOGO_NAME)
+        local logo = g_render:load_texture_from_file(logo_path)
+
+
         if checkboxwatermarkdraw:get_value() == true then
-            g_render:text(vec2:new(10, 10), color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "[vTeemo]", nil, 30)
+            vUtils.text(vec2:new(13.2, 137), color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "[vTeemo]", "QueensidesMedium", 30)
+            if logo ~= nil then
+                g_render:image(vec2:new(-60, -50), vec2:new(240, 240), logo)
+            end
         end
 
         if checkboxqdraw:get_value() == true then
             if vUtils.canCast(mySpells, "q") == true then
-                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["q"].Range, 2, 360, 2)
+                vUtils.circle_3d(g_local.position, mySpells["q"].Range, 2, 2.25, true )
             end
         end
 
