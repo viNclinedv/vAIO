@@ -6,62 +6,100 @@
     
 ]]--
 
-local vAIO_VERSION = "1.2"
+local vAIO_VERSION = "1.3"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
+local vAIO_LOGO_NAME = "[vAIO]Logo.png"
+local vAIO_LOGO_PATH = vAIO_REPO_BASE_URL .. vAIO_LOGO_NAME
 local vUTILS_LUA_NAME = "vUtils.lua"
 local vUTILS_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vUtils/main/"
 local vUTILS_REPO_SCRIPT_PATH = vUTILS_REPO_BASE_URL .. vUTILS_LUA_NAME
 local needsReloadAfterUpdate = false
+local skipUpdate = false
 
 
 local function fetch_url(url)
-    local handle = io.popen("curl -s -H 'Cache-Control: no-cache' " .. url)
+        local handle = io.popen("curl -s -H 'Cache-Control: no-cache' " .. url)
+        if not handle then
+            print("Failed to fetch URL: " .. url)
+            return nil
+        end
+        local content = handle:read("*a")
+        handle:close()
+        return content
+end
+local function download_image(url, output_path)
+    local curl_command = string.format("curl -s -H 'Cache-Control: no-cache' -o '%s' '%s'", output_path, url)
+    local handle = io.popen(curl_command)
     if not handle then
-        print("Failed to fetch URL: " .. url)
-        return nil
+        print("Failed to initiate download for the image: " .. url)
+        return false
     end
-    local content = handle:read("*a")
+    local result = handle:read("*a")
     handle:close()
-    return content
+
+    local file = io.open(output_path, "rb")
+    if file then
+        local content = file:read("*a")
+        file:close()
+        if content and #content > 0 then
+            print("[vAIO]Logo downloaded and saved successfully at: " .. output_path)
+            return true
+        end
+    end
+
+    print("Failed to download image from: " .. url)
+    return false
 end
 
 local function replace_current_file_with_latest_version(latest_version_script)
+    if skipUpdate == true then print("Skipping Update for vAIO") end
+
+    if skipUpdate == false then
     local resources_path = cheat:get_resource_path()
-    local vAIO_path = resources_path:gsub("resources$", "lua/" .. vAIO_LUA_NAME)
-    local file, errorMessage = io.open(vAIO_path, "w")
-    if not file then
-        print("Failed to open the current file for writing. Error: ", errorMessage)
-        return false
+        local vAIO_path = resources_path:gsub("resources$", "lua/" .. vAIO_LUA_NAME)
+        local file, errorMessage = io.open(vAIO_path, "w")
+        if not file then
+            print("Failed to open the current file for writing. Error: ", errorMessage)
+            return false
+        end
+        file:write(latest_version_script)
+        file:close()
+        return true
     end
-    file:write(latest_version_script)
-    file:close()
-    return true
 end
 
 local function check_for_update()
-    local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
-    if not latest_script_content then
-        print("Failed to fetch [vAIO] for update check.")
-        return
-    end
+    if skipUpdate == true then print("Skipping Update for vAIO") end
 
-    local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
-    if not remote_version then
-        print("Failed to extract version from the latest [vAIO] content.")
-        return
-    end
-
-    if remote_version and remote_version > vAIO_VERSION then
-        if replace_current_file_with_latest_version(latest_script_content) then
-            print("Update successful. Please reload [vAIO].")
-            needsReloadAfterUpdate = true
-        else
-            print("Failed to update [vAIO].")
+    if skipUpdate == false then
+        local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
+        if not latest_script_content then
+            print("Failed to fetch [vAIO] for update check.")
+            return
         end
-    else
-        print("You are running the latest version of [vAIO].")
+    end
+
+    if skipUpdate == false then
+        local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
+        if not remote_version then
+            print("Failed to extract version from the latest [vAIO] content.")
+            return
+        end
+    end
+
+    if skipUpdate == false then
+        if remote_version and remote_version > vAIO_VERSION then
+            if replace_current_file_with_latest_version(latest_script_content) then
+                print("Update successful. Please reload [vAIO].")
+                needsReloadAfterUpdate = true
+            else
+                print("Failed to update [vAIO].")
+            end
+        else
+            print("You are running the latest version of [vAIO].")
+        end
     end
 end
 
@@ -70,8 +108,8 @@ end
 local function check_for_prereqs()
     local resources_path = cheat:get_resource_path()
     local vUtils_path = resources_path:gsub("resources$", "lua\\lib\\" .. vUTILS_LUA_NAME)
-    local file = io.open(vUtils_path, "r")
-    if not file then
+    local vUtils_file = io.open(vUtils_path, "r")
+    if not vUtils_file then
         print("[vUtils] not found. Downloading...")
         local content = fetch_url(vUTILS_REPO_SCRIPT_PATH)
         if content then
@@ -87,19 +125,36 @@ local function check_for_prereqs()
             print("Failed to download [vUtils].")
         end
     else
-        file:close()
+        vUtils_file:close()
         print("[vUtils] found.")
     end
+
+    local logo_path = resources_path:gsub("resources$", "lua\\lib\\" .. vAIO_LOGO_NAME)
+    local logo_file = io.open(logo_path, "rb")
+    if not logo_file then
+        print("[vAIO]Logo not found. Downloading...")
+        if download_image(vAIO_LOGO_PATH, logo_path) then
+            print("[vAIO]Logo downloaded and saved successfully.")
+        else
+            print("Failed to download [vAIO]Logo.")
+        end
+    else
+        logo_file:close()
+        print("[vAIO]Logo found.")
+    end
 end
+
 
 check_for_update()
 check_for_prereqs()
 local vUtils = require("vUtils")
 
 cheat.on("renderer.draw", function()
+        vUtils.menu()
+end)
+cheat.on("renderer.draw", function()
     if needsReloadAfterUpdate then
-        local currentColor = vUtils.updateRGBColor()
-        g_render:text(vec2:new(2000, 500),color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "Update successful! Reload [vAIO]", nil, 45)
+        g_render:text(vec2:new(2000, 500),color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "Update successful! Reload [vAIO]", nil, 45)
     end
 end)
 
@@ -191,7 +246,6 @@ function vLeona()
             Level = 0,
             Base = {10, 35, 60, 85, 110},
             CastTime = 0,
-            coolDown = {14, 13, 12, 11, 10}
         },
         w = {
             lastCast = 0,
@@ -202,7 +256,6 @@ function vLeona()
             Speed = 2500,
             Level = 0,
             CastTime = 0,
-            coolDown = {14, 13, 12, 11, 10}
         },
         e = {
             lastCast = 0,
@@ -214,7 +267,6 @@ function vLeona()
             Speed = 2000,
             Level = 0,
             CastTime = 0.25,
-            coolDown = {12, 10.5, 9, 7.5, 6}
         },
         r = {
             lastCast = 0,
@@ -237,23 +289,77 @@ function vLeona()
     cheat.register_callback("feature", debugUpdate)
 
     cheat.on("renderer.draw", function()
-        local currentColor = vUtils.updateRGBColor()
+
+        local resources_path = cheat:get_resource_path()
+        local logo_path = resources_path:gsub("resources$", "lua\\lib\\" .. vAIO_LOGO_NAME)
+        local logo = g_render:load_texture_from_file(logo_path)
+
+
         if checkboxwatermarkdraw:get_value() == true then
-            g_render:text(vec2:new(10, 10), color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "[vLeona]", nil, 30)
+            g_render:text(vec2:new(13.2, 137), color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), "[vLeona]", nil, 30)
+            if logo ~= nil then
+                g_render:image(vec2:new(-60, -50), vec2:new(240, 240), logo)
+            end
         end
 
+        --beta Glow E, porting to vUtils soon
         if checkboxedraw:get_value() == true then
             if vUtils.canCast(mySpells, "e") == true then
-                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["e"].Range, 2, 360, 2)
+                g_render:circle_3d(g_local.position, color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), mySpells["e"].Range, 2, 99999999999, 2.25)
+                local startAlpha = 8
+                local startThickness = 4
+                local maxThickness = 19
+                local minAlpha = 1
+                local totalLayers = 6
+
+                local alphaDecrement = (startAlpha - minAlpha) / totalLayers
+                local thicknessIncrement = (maxThickness - startThickness) / totalLayers
+
+                for i = 1, totalLayers do
+                    local alpha = math.max(startAlpha - (alphaDecrement * i), minAlpha)
+                    local thickness = math.min(startThickness + (thicknessIncrement * i), maxThickness)
+
+                    g_render:circle_3d(
+                        g_local.position, 
+                        color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, alpha), 
+                        mySpells["e"].Range, 
+                        2, 
+                        360, 
+                        thickness
+                    )
+                end
             end
         end
 
+        --beta glow r, porting to vUtils soon
         if checkboxrdraw:get_value() == true then
             if vUtils.canCast(mySpells, "r") == true then
-                g_render:circle_3d(g_local.position, color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), mySpells["r"].Range, 2, 360, 2)
+                g_render:circle_3d(g_local.position, color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, vUtils.currentColor.a), mySpells["r"].Range, 2, 99999999999, 2.25)
+
+                local startAlpha = 8
+                local startThickness = 4
+                local maxThickness = 19
+                local minAlpha = 1
+                local totalLayers = 6
+
+                local alphaDecrement = (startAlpha - minAlpha) / totalLayers
+                local thicknessIncrement = (maxThickness - startThickness) / totalLayers
+
+                for i = 1, totalLayers do
+                    local alpha = math.max(startAlpha - (alphaDecrement * i), minAlpha)
+                    local thickness = math.min(startThickness + (thicknessIncrement * i), maxThickness)
+
+                    g_render:circle_3d(
+                        g_local.position, 
+                        color:new(vUtils.currentColor.r, vUtils.currentColor.g, vUtils.currentColor.b, alpha), 
+                        mySpells["r"].Range, 
+                        2, 
+                        360, 
+                        thickness
+                    )
+                end
             end
         end
-
     end)
 
     function mySpells:qSpell()
@@ -366,6 +472,7 @@ function vLeona()
             end
             if bestTarget then
                 g_input:cast_spell(e_spell_slot.e, bestTarget.position)
+                bestTarget = nil
                 vUtils.Prints("Casting E on Assist Cast Target")
             else
                 vUtils.Prints("No Suitable Target Found for Assist Cast E")
@@ -395,6 +502,7 @@ function vLeona()
                 local eHit = vUtils.predPosition(mySpells, "e", bestTarget)
                 if eHit.valid and eHit.hitchance >= acc_e_select:get_value() then
                     g_input:cast_spell(e_spell_slot.e, eHit.position)
+                    bestTarget = nil
                     vUtils.Prints("Casting E in Combo Mode on Target with High Metric")
                 else
                     vUtils.Prints("Combo Mode E Cast Aborted - Hitchance or Prediction Invalid")
@@ -439,6 +547,7 @@ function vLeona()
                 local rHit = vUtils.predPosition(mySpells, "r", bestTarget)
                 if rHit.valid and rHit.hitchance >= acc_r_select:get_value() then
                     g_input:cast_spell(e_spell_slot.r, rHit.position)
+                    bestTarget = nil
                     vUtils.Prints("Casting R in Combo Mode with CTRL Key Pressed on Target with High Metric")
                 else
                     vUtils.Prints("Combo Mode R Cast Aborted - Invalid Prediction or Hitchance Too Low")
@@ -475,6 +584,7 @@ function vLeona()
                 end
                 if bestTarget then
                     g_input:cast_spell(e_spell_slot.r, bestTarget.position)
+                    bestTarget = nil
                     vUtils.Prints("Casting R on Assist Cast Target with Best Hitchance")
                     return
                 else
@@ -538,6 +648,337 @@ function vLeona()
             end
         }
     )
+end
+
+function vRenata()
+    Script_name = "vRenata"
+    
+
+    --Renata Q hit on enemy debuff name = RenataQ
+
+    local test_navigation = menu.get_main_window():push_navigation(Script_name, 10000)
+
+    local q_config = g_config:add_bool(true, "Use Q (Combo)")
+    local w_config = g_config:add_bool(true, "Use W (Combo)")
+    local e_config = g_config:add_bool(true, "Use E (Combo)")
+    local r_config = g_config:add_bool(true, "Use R (Combo)")
+    local debug_config = g_config:add_bool(true, "Debug?")
+    local num_nmeR = g_config:add_int(2, "R If Enemies")
+    local q_harass_config = g_config:add_bool(true, "Use Q (Harass)")
+    local e_harass_config = g_config:add_bool(true, "Use E (Harass)")
+    local acc_config = g_config:add_int(0, "Q Accuracy")
+    local e_acc_config = g_config:add_int(0, "E Accuracy")
+    local health_config = g_config:add_int(0, "W Health Threshhold (%)")
+    local w_self_config = g_config:add_bool(true, "W Self?")
+
+    local my_nav = menu.get_main_window():find_navigation(Script_name)
+
+    local spell_sect = my_nav:add_section("Use Spells in Combo")
+    local harass_sect = my_nav:add_section("Use Spells in Harass")
+    local health_sect = my_nav:add_section("W Health Threshold")
+    local acc_sect = my_nav:add_section("Accuracy Slider")
+    local r_sect = my_nav:add_section("Auto R Config")
+    local debug_sect = my_nav:add_section("Debug?!")
+
+    local checkboxq = spell_sect:checkbox("Use Q (Combo)", q_config)
+    local checkboxw = spell_sect:checkbox("Use W (Combo)", w_config)
+    local checkboxe = spell_sect:checkbox("Use E (Combo)", e_config)
+    local checkboxr = spell_sect:checkbox("Use R (Combo)", r_config)
+    checkboxq:set_value(true)
+    checkboxw:set_value(true)
+    checkboxe:set_value(true)
+    checkboxr:set_value(true)
+
+
+
+    local checkbox_harass_q = harass_sect:checkbox("Use Q (Harass)", q_harass_config)
+    local checkbox_harass_e = harass_sect:checkbox("Use E (Harass)", e_harass_config)
+    checkbox_harass_q:set_value(true)
+    checkbox_harass_e:set_value(false)
+
+
+
+    local acc_q_slider = acc_sect:slider_int("Q Accuracy", acc_config, 0, 5, 1)
+    local acc_e_slider = acc_sect:slider_int("E Accuracy", e_acc_config, 0, 5, 1)
+    acc_q_slider:set_value(2)
+    acc_e_slider:set_value(2)
+
+
+    local rslider = r_sect:slider_int("R if it will hit X enemies", num_nmeR, 1, 5, 1)
+
+
+    local w_health_slider = health_sect:slider_int("W Health Threshhold (%)", health_config, 0, 100, 1)
+    w_health_slider:set_value(35)
+
+    local checkbox_w_self = health_sect:checkbox("W Self?", w_self_config)
+    checkbox_w_self:set_value(true)
+
+    local checkbox_debug = debug_sect:checkbox("Print Statements", debug_config)
+    checkbox_debug:set_value(false)
+
+
+
+
+
+
+
+    local function q_buff()
+        for _, enemy in pairs(features.entity_list:get_enemies()) do
+            if features.buff_cache:get_buff(enemy.index, "RenataQ") ~= nil then
+                return true
+            end
+        end
+        return false
+    end
+    
+    local function qTarget()
+        for _, obj in pairs(features.entity_list:get_all()) do
+            if obj:is_hero() and obj:is_enemy() and obj:is_alive() then
+                if features.buff_cache:get_buff(obj.index, "RenataQ") ~= nil then
+                    return obj
+                end
+            end   
+        end
+        return nil
+    end
+
+
+    local mySpells = {
+        q = {
+            lastCast = 0,
+            manaCost = 80,
+            spell = g_local:get_spell_book():get_spell_slot(e_spell_slot.q),
+            spellSlot = e_spell_slot.q,
+            Range = 900,
+            Width = 140,
+            Speed = 1450,
+            Level = 0,
+            CastTime = 0.25,
+        },
+        q2 = {
+            lastCast = 0,
+            manaCost = 0,
+            spell = g_local:get_spell_book():get_spell_slot(e_spell_slot.q),
+            spellSlot = e_spell_slot.q,
+            Range = 275,
+            Width = 140,
+            Speed = 1450,
+            Level = 0,
+            CastTime = 0.25,
+        },
+        w = {
+            lastCast = 0,
+            manaCost = 80,
+            spell = g_local:get_spell_book():get_spell_slot(e_spell_slot.w),
+            spellSlot = e_spell_slot.w,
+            Range = 800,
+            Level = 0,
+            CastTime = 0,
+        },
+        e = {
+            lastCast = 0,
+            manaCost = {70, 80, 90, 100, 110},
+            spell = g_local:get_spell_book():get_spell_slot(e_spell_slot.e),
+            spellSlot = e_spell_slot.e,
+            Range = 800,
+            Width = 220,
+            targetRadius = 225,
+            selfRadius = 325,
+            Speed = 1450,
+            Level = 0,
+            CastTime = 0.25,
+        },
+        r = {
+            lastCast = 0,
+            manaCost = 100,
+            spell = g_local:get_spell_book():get_spell_slot(e_spell_slot.r),
+            spellSlot = e_spell_slot.r,
+            Range = 2000,
+            Width = 500,
+            Speed = 800,
+            Level = 0,
+            CastTime = 0.75,
+        }
+    }
+
+
+    cheat.register_module(
+        {
+            champion_name = "Renata",
+
+            spell_q = function()
+                local target = features.target_selector:get_default_target()
+                local mode = features.orbwalker:get_mode()
+            
+                if not vUtils.canCast(mySpells, "q") then
+                    vUtils.Prints("Q Spell: Not available for casting (cooldown or mana)")
+                    return
+                end
+            --NEED TO FIX THISS
+                -- Check for initial Q cast logic
+                if not q_buff() and target then
+                    local qHit = vUtils.predPosition(mySpells, "q", target)
+                    local badMinion = vUtils.MinionInLine(mySpells, "q", qHit.position)
+            
+                    if qHit.valid and qHit.hitchance >= acc_q_slider:get_value() and not badMinion then
+                        if (mode == vUtils.Combo_key and checkboxq:get_value()) or (mode == vUtils.Harass_key and checkbox_harass_q:get_value()) then
+                            vUtils.Prints("Casting Q")
+                            g_input:cast_spell(mySpells.q.spellSlot, qHit.position)
+                            features.orbwalker:set_cast_time(mySpells.q.CastTime)
+                            vUtils.Prints("Casted Q")
+                            return true
+                        end
+                    end
+                elseif q_buff() then
+                    -- Adjusted Recast Q logic to check for range to the target with the Q buff
+                    local qBuffedTarget = qTarget() -- This should get the target that has the Q buff
+                    if qBuffedTarget then
+                        for _, obj in pairs(features.entity_list:get_all()) do
+                            if obj:is_hero() and obj:is_enemy() and obj:is_alive() and features.buff_cache:get_buff(obj.index, "RenataQ") == nil then
+                                local distanceToQBuffedTarget = vUtils.getDistance(obj.position, qBuffedTarget.position)
+                                if distanceToQBuffedTarget <= mySpells.q2.Range then
+                                    local q2Hit = vUtils.predPosition(mySpells, "q", obj) -- Use prediction for recasting Q
+                                    if q2Hit.valid and q2Hit.hitchance >= acc_q_slider:get_value() then
+                                        if (mode == vUtils.Combo_key and checkboxq:get_value()) or (mode == vUtils.Harass_key and checkbox_harass_q:get_value()) then
+                                            vUtils.Prints("Recasting Q to new target within range of Q-buffed target")
+                                            g_input:cast_spell(mySpells.q.spellSlot, q2Hit.position)
+                                            features.orbwalker:set_cast_time(mySpells.q.CastTime)
+                                            vUtils.Prints("Recasted Q to new target")
+                                            return true
+                                        end
+                                    end
+                                    break -- Once a valid target is found and attempted for recast, exit the loop
+                                end
+                            end
+                        end
+                    end
+                end
+            end,
+            
+            
+
+
+
+            spell_w = function()
+                local target = features.target_selector:get_default_target()
+                local mode = features.orbwalker:get_mode()
+            
+                -- Check if W spell can be cast
+                if not vUtils.canCast(mySpells, "w") then
+                    vUtils.Prints("W Spell: Not available for casting (cooldown or mana)")
+                    return
+                end
+            
+                -- Check for allies around the local player and excluding self from the count
+                local numAlliesAround = vUtils.NumAlliesInRange(mySpells.w.Range) - 1
+                vUtils.Prints("Allies around me: " .. numAlliesAround)
+            
+                if numAlliesAround > 0 and checkboxw:get_value() then
+                    for _, ally in pairs(features.entity_list:get_allies()) do
+                        if ally and ally:is_alive() and ally:is_hero() and ally ~= g_local then
+                            local allyHealthPercentage = (ally.health / ally.max_health) * 100
+                            local distanceToAlly = vUtils.getDistance(g_local.position, ally.position)
+                            local distanceToTarget = vUtils.getDistance(ally.position, target.position)
+            
+                            if mode == vUtils.Combo_key and distanceToAlly <= mySpells.w.Range and allyHealthPercentage <= w_health_slider:get_value() then
+                                if distanceToTarget <= ally.attack_range or distanceToTarget <= danger_range then
+                                    vUtils.Prints("Casting W on Ally")
+                                    g_input:cast_spell(mySpells.w.spellSlot, ally.network_id)
+                                    vUtils.Prints("Casted W on Ally")
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
+            
+                -- Cast W on self if the checkbox for self-casting is checked and the player's health is below the threshold
+                if checkbox_w_self:get_value() and (mode == vUtils.Combo_key or mode == vUtils.Harass_key) then
+                    local selfHealthPercentage = (g_local.health / g_local.max_health) * 100
+                    if selfHealthPercentage <= w_health_slider:get_value() and g_local.health ~= 0 then
+                        vUtils.Prints("Casting W on self")
+                        g_input:cast_spell(mySpells.w.spellSlot, g_local.network_id)
+                        vUtils.Prints("Casted W on self")
+                        return true
+                    end
+                end
+            end,
+            
+
+            spell_e = function()
+                local target = features.target_selector:get_default_target()
+                local mode = features.orbwalker:get_mode()
+            
+                if not vUtils.canCast(mySpells, "e") then
+                    vUtils.Prints("E Spell: Not available for casting (cooldown or mana)")
+                    return
+                end
+            
+                if target and vUtils.isSpellInRange(mySpells, "e", target) then
+                    local eHit = vUtils.predPosition(mySpells, "e", target)
+                    vUtils.Prints("Getting E hit prediction")
+            
+                    if (eHit.valid and eHit.hitchance >= acc_e_slider:get_value()) then
+                        if (features.orbwalker:get_mode() == vUtils.Combo_key and checkboxe:get_value()) or
+                           (features.orbwalker:get_mode() == vUtils.Harass_key and checkbox_harass_e:get_value()) then
+                            local action = features.orbwalker:get_mode() == vUtils.Combo_key and "combo" or "harass"
+                            vUtils.Prints("Casting E (" .. action .. ")")
+                            g_input:cast_spell(mySpells.e.spellSlot, eHit.position)
+                            features.orbwalker:set_cast_time(mySpells.e.CastTime)
+                            vUtils.Prints("Casted E (" .. action .. ")")
+                            return true
+                        end
+                    end
+                end
+            end,
+            
+
+            spell_r = function()
+
+                local target = features.target_selector:get_default_target()
+                local mode = features.orbwalker:get_mode()
+            
+                if not vUtils.canCast(mySpells, "r") then
+                    vUtils.Prints("R Spell: Not available for casting (cooldown or mana)")
+                    return
+                end
+                
+                    if features.orbwalker:get_mode() == vUtils.Combo_key then
+                        vUtils.Prints("Do Ult Combo?")
+                        local numEnemiesInRange = vUtils.NumEnemiesInRange(mySpells.r.Range)
+                        vUtils.Prints("In range: " .. numEnemiesInRange)
+                
+                        if numEnemiesInRange > 0 and target then
+                            local rHit = vUtils.predPosition(mySpells, "r", target)
+                            if rHit.valid and rHit.hitchance > 1.0 then -- Assuming hitchance > 1.0 means a high probability hit
+                                vUtils.Prints("R pred doing rect")
+                                local poly = vUtils.Rectangle_Polygon(g_local.position, target.position, mySpells.r.Width, mySpells.r.Range)
+                                vUtils.Prints("R get x hit by rect")
+                                local numHits = vUtils.getEnimiesHitBy(poly)
+                                if numHits >= rslider:get_value() then
+                                    g_input:cast_spell(mySpells.r.spellSlot, rHit.position)
+                                    vUtils.Prints("Casted R (Combo)")
+                                    return true
+                                end
+                            end
+                        end
+                    end
+            end,
+                
+
+
+            
+            get_priorities = function()
+                return {
+                    "spell_q",
+                    "spell_r",
+                    "spell_e",
+                    "spell_w"
+                }
+            end
+        }
+    )
+
 end
 
 function vTeemo()
@@ -604,7 +1045,6 @@ function vTeemo()
     cheat.register_callback("feature",debugUpdate)
 
     cheat.on("renderer.draw", function()
-        local currentColor = vUtils.updateRGBColor()
         if checkboxwatermarkdraw:get_value() == true then
             g_render:text(vec2:new(10, 10), color:new(currentColor.r, currentColor.g, currentColor.b, currentColor.a), "[vTeemo]", nil, 30)
         end
@@ -799,12 +1239,13 @@ function LoadPrints(str)
 end
 local championModules = {
     Leona = vLeona,
+    Renata = vRenata,
     Teemo = vTeemo
 }
 Champion = g_local.champion_name.text
 if championModules[Champion] then
     championModules[Champion]()
-    LoadPrints("+" .. Champion .. "+ -- Loading from [vAIO]")
+    LoadPrints("[v" .. Champion .. "] -- Loading from [vAIO]")
     LoadDBG = 0
 else
     LoadPrints("Champion Not Supported in [vAIO].")
