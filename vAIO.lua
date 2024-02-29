@@ -6,7 +6,7 @@
     
 ]]--
 
-local vAIO_VERSION = "1.3"
+local vAIO_VERSION = "1.3.1"
 local vAIO_LUA_NAME = "vAIO.lua"
 local vAIO_REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = vAIO_REPO_BASE_URL .. vAIO_LUA_NAME
@@ -71,10 +71,13 @@ local function replace_current_file_with_latest_version(latest_version_script)
 end
 
 local function check_for_update()
+    local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
+    local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
+
     if skipUpdate == true then print("Skipping Update for vAIO") end
 
     if skipUpdate == false then
-        local latest_script_content = fetch_url(vAIO_REPO_SCRIPT_PATH)
+
         if not latest_script_content then
             print("Failed to fetch [vAIO] for update check.")
             return
@@ -82,7 +85,6 @@ local function check_for_update()
     end
 
     if skipUpdate == false then
-        local remote_version = latest_script_content:match('local vAIO_VERSION = "(%d+%.%d+)"')
         if not remote_version then
             print("Failed to extract version from the latest [vAIO] content.")
             return
