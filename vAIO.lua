@@ -18,7 +18,7 @@ local vUTILS_REPO_SCRIPT_PATH = vUTILS_REPO_BASE_URL .. vUTILS_LUA_NAME
 
 local needsReloadAfterUpdate = false
 local needsSlottedReloadAfterUpdate = false
-local skipUpdate = false
+local skipUpdate = true
 
 
 local function fetch_url(url)
@@ -135,9 +135,9 @@ local function check_for_prereqs()
     end
     
     local fonts = {
-        {name = "Queensides", url = REPO_BASE_URL .. "Assets/Queensides.ttf", path = resources_path:gsub("resources$", "fonts\\Queensides.ttf")},
-        {name = "QueensidesLight", url = REPO_BASE_URL .. "Assets/QueensidesLight.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesLight.ttf")},
-        {name = "QueensidesMedium", url = REPO_BASE_URL .. "Assets/QueensidesMedium.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesMedium.ttf")},
+        --{name = "Queensides", url = REPO_BASE_URL .. "Assets/Queensides.ttf", path = resources_path:gsub("resources$", "fonts\\Queensides.ttf")},
+        --{name = "QueensidesLight", url = REPO_BASE_URL .. "Assets/QueensidesLight.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesLight.ttf")},
+        --{name = "QueensidesMedium", url = REPO_BASE_URL .. "Assets/QueensidesMedium.ttf", path = resources_path:gsub("resources$", "fonts\\QueensidesMedium.ttf")},
     }
 
     for _, font in ipairs(fonts) do
@@ -415,6 +415,11 @@ function vLeona()
             vUtils.Prints("Cannot Cast E - Spell on Cooldown or Insufficient Mana")
             return
         end
+        --testing multihit and poly/rectangle draws
+       --[[ if vUtils.canCast(mySpells, "e") == true then
+            
+            vUtils.getMultihitPosition(mySpells["e"].Range, mySpells["e"].Speed, mySpells["e"].Width, 0 )
+        end]]--
         
         target = features.target_selector:get_default_target()
         mode = features.orbwalker:get_mode()
