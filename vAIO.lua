@@ -6,7 +6,7 @@
     
 ]]--
 
-local vAIO_VERSION = "1.5"
+local vAIO_VERSION = "1.6"
 local vAIO_LUA_NAME = "vAIO.lua"
 local REPO_BASE_URL = "https://raw.githubusercontent.com/viNclinedv/vAIO/main/"
 local vAIO_REPO_SCRIPT_PATH = REPO_BASE_URL .. vAIO_LUA_NAME
@@ -18,7 +18,7 @@ local vUTILS_REPO_SCRIPT_PATH = vUTILS_REPO_BASE_URL .. vUTILS_LUA_NAME
 
 local needsReloadAfterUpdate = false
 local needsSlottedReloadAfterUpdate = false
-local skipUpdate = true
+local skipUpdate = false
 
 
 local function fetch_url(url)
